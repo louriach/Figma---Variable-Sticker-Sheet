@@ -1,17 +1,186 @@
-<h2>Shape Creator</h2>
-<p>Count: <input id="count" type="number" value="5"></p>
-<button id="create">Create</button>
-<button id="cancel">Cancel</button>
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variable Collections</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: sans-serif;
+    }
+    .container {
+      background-color: #f5f5f5;
+      padding: 16px;
+    }
+    h1 {
+      background: black;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      list-style: none;
+      padding: 1.5rem;
+    }
+    ul {
+    }
+    li {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      list-style: none;
+      margin-bottom: .5rem;
+      padding: 1rem;
+    }
+    .collection-id {
+      display: block;
+      color: gray;
+      font-size: 0.9em;
+      margin-bottom: 0.5rem;
+    }
+    .variable-count {
+      background: #EBFFEE;
+      border: 1px solid #14AE5C;
+      border-radius: 9px;
+      display: inline-block;
+      color: #02542D;
+      padding: 3px 6px;
+    }
+    .variable-count-container {
+      margin-top: 0.5rem;
+    }
+    .variable-group {
+      margin-top: 0.5rem;
+      font-size: 0.8em;
+      color: #666;
+    }
+    .modes-info {
+      font-size: 0.8em;
+      color: #888;
+      margin-top: 0.5rem;
+    }
+    .modes-list {
+      margin-top: 0.25rem;
+    }
+    .modes-list-item {
+      margin-right: 0.5rem;
+    }
+    .create-sheet-button {
+      background-color: #eee;
+      border-radius: 6px;
+      border: none;
+      border-bottom: 3px solid #ccc;
+      color: #000;
+      display: block;
+      margin-top: 1.5rem;
+      padding: 10px 16px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+    .create-sheet-button:hover {
+      opacity: .75;
+    }
+  </style>
+</head>
+<body>
+  <h1>Local variable collections</h1>
+  <div class="container">
+    <ul id="collection-list"></ul>
+  </div>
+  <script>
+    // Function to resize the plugin window
+    const resizePlugin = () => {
+      const height = document.body.scrollHeight;
+      parent.postMessage({ pluginMessage: { type: 'resize', height } }, '*');
+    };
 
-document.getElementById('create').onclick = () => {
-  const textbox = document.getElementById('count');
-  const count = parseInt(textbox.value, 10);
-  parent.postMessage({ pluginMessage: { type: 'create-shapes', count } }, '*')
-}
+    // Function to handle "Create Sticker Sheet" button click
+    const createStickerSheet = (collectionId) => {
+      // Implement your logic to create a sticker sheet for the given collection ID
+      console.log(`Creating sticker sheet for collection with ID: ${collectionId}`);
+      // Example: Open a new tab or perform an action in Figma
+    };
 
-document.getElementById('cancel').onclick = () => {
-  parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
-}
+    // Handle messages from the plugin code
+    window.onmessage = (event) => {
+      const { type, collections } = event.data.pluginMessage;
+      if (type === 'collections') {
+        const list = document.getElementById('collection-list');
+        collections.forEach(collection => {
+          const listItem = document.createElement('li');
 
-</script>
+          // Display ID with "ID:" prefix
+          const idSpan = document.createElement('span');
+          idSpan.className = 'collection-id';
+          idSpan.textContent = `ID: ${collection.id}`;
+
+          // Display title (collection name)
+          const title = document.createElement('h3');
+          title.textContent = collection.name;
+
+          // Wrap variable count in a div
+          const variableCountContainer = document.createElement('div');
+          variableCountContainer.className = 'variable-count-container';
+          const variableCountSpan = document.createElement('span');
+          variableCountSpan.className = 'variable-count';
+          variableCountSpan.textContent = `Variables: ${collection.variableCount}`;
+          variableCountContainer.appendChild(variableCountSpan);
+
+          // Display variable groups, if any
+          if (collection.variableGroups && collection.variableGroups.length > 0) {
+            const groupsContainer = document.createElement('div');
+            groupsContainer.className = 'variable-group';
+            groupsContainer.textContent = `Groups: `;
+            collection.variableGroups.forEach((group, index) => {
+              if (index > 0) groupsContainer.textContent += ', ';
+              groupsContainer.textContent += group.name;
+            });
+            listItem.appendChild(groupsContainer); // Append groups container to list item
+          }
+
+          // Display modes information if available
+          if (collection.modes && collection.modes.length > 0) {
+            const modesInfoDiv = document.createElement('div');
+            modesInfoDiv.className = 'modes-info';
+            modesInfoDiv.textContent = `Modes: (${collection.modes.length}) `;
+
+            const modesList = document.createElement('span');
+            modesList.className = 'modes-list';
+
+            collection.modes.forEach((mode, index) => {
+              const modeItem = document.createElement('span');
+              modeItem.className = 'modes-list-item';
+              modeItem.textContent = `${mode.modeId}`;
+              modesList.appendChild(modeItem);
+            });
+
+            modesInfoDiv.appendChild(modesList);
+            listItem.appendChild(modesInfoDiv); // Append modes info to list item
+          }
+
+          // Create "Create Sticker Sheet" button
+          const createSheetButton = document.createElement('button');
+          createSheetButton.className = 'create-sheet-button';
+          createSheetButton.textContent = 'Create Sticker Sheet';
+          createSheetButton.onclick = () => createStickerSheet(collection.id);
+
+          // Append elements to list item
+          listItem.appendChild(idSpan);
+          listItem.appendChild(title);
+          listItem.appendChild(variableCountContainer);
+          listItem.appendChild(createSheetButton);
+
+          // Append list item to list
+          list.appendChild(listItem);
+        });
+        resizePlugin(); // Resize after adding all collections
+      }
+    };
+  </script>
+</body>
+</html>
